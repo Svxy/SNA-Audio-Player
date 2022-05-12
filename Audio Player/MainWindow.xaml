@@ -1,0 +1,545 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Audio_Player" x:Name="window"
+        x:Class="Audio_Player.MainWindow"
+        mc:Ignorable="d"
+        Title="S&amp;A Music Player" MinHeight="500" MinWidth="520" SizeChanged="Window_SizeChanged" Closing="Window_Closed" Background="#FF325D29" Icon="/music.png" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+
+        <Style TargetType="Image" x:Key="BottomButtonsStyle">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="true">
+                    <Setter Property="Opacity" Value="0.4"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="TB_MouseOver">
+            <Setter Property="Foreground" Value="#FFD4D4D4"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="true">
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+
+                <DataTrigger Binding="{Binding Name}" Value="Main Playlist">
+                    <Setter Property="IsEnabled" Value="False"/>
+                    <Setter Property="Foreground" Value="#FF008A02"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="Border" x:Key="PL_Settings">
+            <Setter Property="Background" Value="#FF008A02"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF004E01"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="174"/>
+            <ColumnDefinition Width="24"/>
+            <ColumnDefinition Width="15*"/>
+            <ColumnDefinition Width="131*"/>
+        </Grid.ColumnDefinitions>
+
+        <MediaElement Name="ms" MediaEnded="ms_MediaEnded" MediaOpened="MyMediaElement_MediaOpened" LoadedBehavior="Manual" Grid.ColumnSpan="3" Margin="0,0,45,0"/>
+        <Grid x:Name="MainPanel" Grid.Column="2" Grid.ColumnSpan="2">
+            <Grid.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FF325D29" Offset="0"/>
+                    <GradientStop Color="#FF2B1B1B" Offset="0.717"/>
+                </LinearGradientBrush>
+            </Grid.Background>
+
+            <Grid x:Name="AddFolder" Visibility="Visible">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="20, 20, 0, 0">
+                    <Button Width="50" Content="+" BorderThickness="0" FontSize="30" Cursor="Hand" Style="{StaticResource RoundedButtonStylePlus}" Click="AddPath_Click"/>
+                    <TextBlock Margin="20,0,0,0" Text="Add New Music" VerticalAlignment="Center" FontSize="20" FontWeight="DemiBold"/>
+                </StackPanel>
+
+                <ListBox Grid.Row="1" BorderThickness="0" x:Name="ListPaths" Background="{x:Null}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Width="35" BorderThickness="0" Content="{Binding}" Cursor="Hand" FontSize="20" Style="{StaticResource RoundedButtonStyleMinus}" Click="RemovePath_Click"/>
+                                <TextBlock Margin="10,0,0,0" Text="{Binding}" VerticalAlignment="Center" FontSize="15" FontWeight="DemiBold"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+
+                    <ListBox.Style>
+                        <Style TargetType="{x:Type ListBox}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Visibility, ElementName=BottomPanel}" Value="Hidden">
+                                    <Setter Property="Margin" Value="50,30,10,0"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Visibility, ElementName=BottomPanel}" Value="Visible">
+                                    <Setter Property="Margin" Value="50,30,10,50"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.Style>
+                </ListBox>
+            </Grid>
+
+            <Grid x:Name="PlayGrid" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+
+                <ListBox BorderThickness="0" HorizontalContentAlignment="Stretch" Grid.Row="1" x:Name="Play" Background="#FF7E7E7E"
+                         DataContext="{Binding}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="{x:Type StackPanel}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Visibility, ElementName=BottomPanel}" Value="Visible">
+                                                <Setter Property="Margin" Value="0, 0, 0, 50"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Visibility, ElementName=BottomPanel}" Value="Hidden">
+                                                <Setter Property="Margin" Value="0, 0, 0, 0"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                            </StackPanel>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <ListView Margin="0, 2, 0, 2" HorizontalContentAlignment="Stretch" BorderBrush="#FF0F0B0B" BorderThickness="3, 1, 3, 1" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListView.Background>
+                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                        <GradientStop Color="#FF004E01" Offset="1"/>
+                                        <GradientStop Color="#FF007902" Offset="0"/>
+                                    </LinearGradientBrush>
+                                </ListView.Background>
+                                <Grid Margin="5, 5, 0, 5" Cursor="Hand" MouseLeftButtonDown="Audio_MouseLeftButtonDown">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Orientation="Vertical" Background="{x:Null}">
+                                        <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="DemiBold"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Margin="0, 0, 5, 0" Text="{Binding Singer}"  FontSize="12" FontWeight="Regular"/>
+                                            <TextBlock Margin="5, 0, 0, 0" Text="{Binding Album}" FontSize="12" FontWeight="Regular"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <TextBlock Background="{x:Null}" VerticalAlignment="Center" Grid.Column="1" Margin="0, 0, 2, 0" TextAlignment="Right" FontSize="13" FontWeight="DemiBold">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0:00}:{1:00;00}">
+                                                <Binding Path="Duration.Minutes"/>
+                                                <Binding Path="Duration.Seconds"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Grid>
+                            </ListView>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Grid x:Name="TopPlayGrid">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="0.1*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.Background>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                            <GradientStop Color="#FF007902" Offset="0"/>
+                            <GradientStop Color="#FF03A405" Offset="0.5"/>
+                            <GradientStop Color="#FF007902" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Grid.Background>
+
+                    <Image Margin="15, 30, 15, 30" Source="Resources/NoImg.jpg" x:Name="Img_Audio" HorizontalAlignment="Center">
+                        <Image.Effect>
+                            <DropShadowEffect/>
+                        </Image.Effect>
+                        <Image.Style>
+                            <Style TargetType="{x:Type Image}">
+                                <Setter Property="Visibility" Value="Hidden"/>
+                                <Style.Triggers>
+
+                                    <DataTrigger Binding="{Binding Visibility, ElementName=TitleSizer}" Value="Hidden">
+                                        <Setter Property="Grid.ColumnSpan" Value="4"/>
+                                    </DataTrigger>
+
+                                    <DataTrigger Binding="{Binding Visibility, ElementName=TitleSizer}" Value="Visible">
+                                        <Setter Property="Grid.ColumnSpan" Value="1"/>
+                                    </DataTrigger>
+
+                                    <DataTrigger Binding="{Binding Visibility, ElementName=BottomPanel}" Value="Visible">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Duration="0:0:1" From="0" To="1"
+                                           Storyboard.TargetProperty="Opacity"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+
+                    <Grid  x:Name="TitleSizer" Grid.Column="2" VerticalAlignment="Bottom"  Margin="0, 0, 15, 30">
+
+                        <Grid.Style>
+                            <Style TargetType="{x:Type Grid}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Visibility, ElementName=BottomPanel}" Value="Visible">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <ThicknessAnimation Duration="0:0:1" From="200, 0, 15, 30" To="0, 0, 15, 30"
+                                           Storyboard.TargetProperty="Margin"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Viewbox Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Singer}" FontWeight="Regular"/>
+                                    <TextBlock Text="{Binding Album}" Margin="10,0,0,0" FontWeight="Regular"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Viewbox>
+
+                    </Grid>
+                </Grid>
+
+            </Grid>
+
+            <Grid x:Name="PListControl" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="70"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border BorderBrush="Black" BorderThickness="0, 0, 0, 3">
+                    <TextBlock Margin="70, 20, 0, 0" Text="Playlists" FontSize="23" FontWeight="DemiBold"/>
+                </Border>
+
+                <ListBox x:Name="PL_ListBox" Grid.Row="1" SelectedIndex="-1" Background="{x:Null}" DataContext="{Binding}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel  Margin="10, 10, 10, 0" Orientation="Vertical">
+                                <Border Width="120" Height="120" BorderThickness="1" BorderBrush="Black" Cursor="Hand" PreviewMouseLeftButtonDown="PL_Click">
+                                    <Grid>
+                                        <Image x:Name="ImgPL" Source="Resources/PlayList.png">
+                                            <Image.Style>
+                                                <Style TargetType="{x:Type Image}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType={x:Type Border}}}" Value="True">
+                                                            <Setter Property="Opacity" Value="0.3"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType={x:Type Border}}}" Value="False">
+                                                            <Setter Property="Opacity" Value="1"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+                                    </Grid>
+                                </Border>
+
+                                <TextBlock x:Name="PLName" Margin="0, 5, 0, 0" Text="{Binding Name}" TextAlignment="Center" FontWeight="Bold"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+
+
+
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel IsItemsHost="True" Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                </ListBox>
+            </Grid>
+
+            <Grid x:Name="PListInfo" Visibility="Hidden" DataContext="{Binding}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="300"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Orientation="Horizontal" Background="#FF212020">
+                    <Image Source="Resources/PlayList.png" Stretch="Fill" Width="200" Height="200" Margin="50, 50, 0, 50"/>
+                    <StackPanel Orientation="Vertical">
+                        <TextBox BorderThickness="0" IsHitTestVisible="False" IsReadOnly="True" x:Name="PlayListName_TB" Text="{Binding Name, Mode=TwoWay}" FontSize="25"
+                                 FontWeight="DemiBold" Margin="25, 50, 0, 0" Background="{x:Null}" Foreground="#FFBDBCBC" KeyDown="PlayListName_TB_KeyDown"/>
+                        <StackPanel Orientation="Horizontal"  Margin="25, 20, 0, 0">
+                            <TextBlock Text="{Binding AudioList.Count, StringFormat=songs : \{0\}}" Foreground="#FFBDBCBC" FontSize="15"/>
+                            <TextBlock Text="{Binding AudioTime, StringFormat=- \{0\} min.}" Margin="3,0,0,0" Foreground="#FFBDBCBC" FontSize="15"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Settings" Style="{DynamicResource TB_MouseOver}" FontSize="14" Margin="25, 63, 0, 0" MouseLeftButtonDown="Settings_MouseLeftButtonDown" Cursor="Hand"/>
+
+                        <TextBlock Text="Play"  Margin="25, 5, 0, 0" Cursor="Hand" FontSize="14" PreviewMouseLeftButtonDown="PlayPlayList_Click">
+                            <TextBlock.Style>
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Setter Property="Foreground" Value="#FFD4D4D4"/>
+                                    <Setter Property="Margin" Value="25, 5, 0, 0"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="true">
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <TextBlock Text="Add songs" Style="{DynamicResource TB_MouseOver}" DataContext="{Binding}"  Margin="25, 5, 0, 0" Cursor="Hand" FontSize="14" MouseLeftButtonDown="PlayListAddAudio_MouseLeftButtonDown"/>
+
+                        <Popup x:Name="SettPopup" AllowsTransparency="True" Placement="RelativePoint" PopupAnimation="Slide" HorizontalOffset="100" VerticalOffset="190">
+                            <Grid  Background="LightGray">
+                                <StackPanel Margin="10">
+                                    <TextBlock Text="Rename" FontSize="16" Margin="0, 0, 0, 10" PreviewMouseLeftButtonDown="RenamePL_PreviewMouseLeftButtonDown"/>
+                                    <TextBlock Text="Delete" FontSize="16" PreviewMouseLeftButtonDown="RemovePL_PreviewMouseLeftButtonDown"/>
+                                </StackPanel>
+                            </Grid>
+                        </Popup>
+                    </StackPanel>
+                </StackPanel>
+
+                <ListBox Grid.Row="1" x:Name="ListBoxOfAudios" HorizontalContentAlignment="Stretch" Background="#FF7E7E7E" ItemsSource="{Binding AudioList}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="{x:Type StackPanel}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Visibility, ElementName=BottomPanel}" Value="Visible">
+                                                <Setter Property="Margin" Value="0, 0, 0, 50"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Visibility, ElementName=BottomPanel}" Value="Hidden">
+                                                <Setter Property="Margin" Value="0, 0, 0, 0"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                            </StackPanel>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <ListView Margin="0, 2, 0, 2" HorizontalContentAlignment="Stretch" BorderBrush="#FF0F0B0B" BorderThickness="3, 1, 3, 1" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListView.Background>
+                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                        <GradientStop Color="#FF03A405" Offset="1"/>
+                                        <GradientStop Color="#FF006702" Offset="0"/>
+                                    </LinearGradientBrush>
+                                </ListView.Background>
+                                <Grid Margin="0,0, 0, 0" Background="{x:Null}" >
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="20"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <ListView Grid.Column="0" IsHitTestVisible="False" Margin="0, 0, 0, 0" BorderBrush="{x:Null}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="{x:Null}">
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <StackPanel Orientation="Vertical" Background="{x:Null}">
+                                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="DemiBold"/>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Margin="0, 0, 5, 0" Text="{Binding Singer}"  FontSize="12" FontWeight="Regular"/>
+                                                    <TextBlock Margin="5, 0, 0, 0" Text="{Binding Album}" FontSize="12" FontWeight="Regular"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </ListView>
+
+                                    <TextBlock Height="15" Cursor="Hand" Grid.Column="1" FontSize="20" Background="{x:Null}" HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" PreviewMouseLeftButtonDown="RemoveAudioFromPlayList_Click">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DataContext.Name, ElementName=ListBoxOfAudios}" Value="Main Playlist">
+                                                        <Setter Property="Visibility" Value="Hidden"/>
+                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style><InlineUIContainer>
+                                            <Image Source="Resources/remove.png"/>
+                                        </InlineUIContainer></TextBlock>
+
+                                </Grid>
+                            </ListView>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+            </Grid>
+        </Grid>
+
+        <Grid x:Name="RightPanel" Grid.Column="0" Background="#FF008602" HorizontalAlignment="Left" Width="50" Opacity="1" Panel.ZIndex="1">
+            <Grid.Effect>
+                <DropShadowEffect Opacity="0.5" Direction="90"/>
+            </Grid.Effect>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+
+
+            <Button Grid.Row="0" Margin="0, 5, 0, 5" BorderThickness="0" Background="{x:Null}" Name="PLrightButt" Click="PlayList_Click" ToolTip="Play">
+                <Image Source="Resources/MainPL.png" Width="20" />
+            </Button>
+
+            <Button Grid.Row="1" Margin="0, 5, 0, 5" BorderThickness="0" Background="{x:Null}" Click="AddToFolder_Click" ToolTip="Add Path">
+                <Image Source="Resources/Addfolder.png" Width="25"/>
+            </Button>
+
+            <Button Grid.Row="2" Margin="0, 5, 0, 5" BorderThickness="0" Background="{x:Null}" Click="ShowLists_Click" ToolTip="Playlists">
+                <Image Source="Resources/playlists.png" Stretch="Uniform" Width="25"/>
+            </Button>
+
+            <Button Grid.Row="3" Margin="0, 5, 0, 5" BorderThickness="0" Background="{x:Null}" Click="AddPlayList_Click" ToolTip="Add playlist">
+                <Image Margin="2, 0, 0, 0" Source="Resources/addpl.png" Width="30"/>
+            </Button>
+
+        </Grid>
+        <Grid x:Name="BottomPanel"  Grid.ColumnSpan="4" Panel.ZIndex="2" Grid.Column="0" VerticalAlignment="Bottom" Visibility="Hidden" Opacity="1" Height="50">
+            <Grid.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FF3A5E83" Offset="0.025"/>
+                    <GradientStop Color="#FF0E1721"/>
+                </LinearGradientBrush>
+            </Grid.Background>
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ElementName=BottomPanel, Path=Visibility}" Value="Visible">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ThicknessAnimation Duration="0:0:1" From="0, 0, 0, -50" To= "0, 0, 0, 0"
+                                           Storyboard.TargetProperty="Margin"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" MinWidth="100"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="250" MinWidth="250"/>
+                </Grid.ColumnDefinitions>
+
+
+                <StackPanel Name="BotButtons" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Stretch" Panel.ZIndex="1" Background="{Binding ElementName=BottomPanel, Path=Background}">
+                    <Border Width="30" Cursor="Hand" Background="{x:Null}" Margin="5, 10, 5, 10" PreviewMouseLeftButtonDown="PrevAudio_Click" BorderThickness="0">
+                        <Image Source="Resources\PrevB.png" Style="{DynamicResource BottomButtonsStyle}"/>
+                    </Border>
+
+                    <Border Width="30" Cursor="Hand" Margin="5, 10, 5, 10" DataContext="{Binding}" Name="PlayButton" Background="{x:Null}" PreviewMouseLeftButtonDown="Play_Click" BorderThickness="0">
+                        <Image Source="Resources\Pause.png" Style="{DynamicResource BottomButtonsStyle}"/>
+                    </Border>
+
+                    <Border Width="30" Cursor="Hand" Margin="5, 10, 5, 10" Background="{x:Null}" PreviewMouseLeftButtonDown="NextAudio_Click" BorderThickness="0">
+                        <Image Source="Resources\NextB.png" Style="{DynamicResource BottomButtonsStyle}"/>
+                    </Border>
+
+                    <ToggleButton IsChecked="{Binding ElementName=pup, Path=IsOpen}" Cursor="Hand" Width="30" Style="{DynamicResource Toggle}"  Height="30" Margin="5" Background="{x:Null}" BorderThickness="0">
+                        <Image Source="Resources/VolumeB.png"/>
+                    </ToggleButton>
+
+                    <ToggleButton Width="30" Cursor="Hand" x:Name="RepeatButt" Margin="5, 10, 5, 10" Style="{DynamicResource Toggle}" BorderThickness="0">
+                        <Image Source="Resources/Replay.png"/>
+                    </ToggleButton>
+
+                    <Border Width="30" Cursor="Hand" Name="RandomButt" Margin="5, 10, 5, 10" PreviewMouseLeftButtonDown="RandomButt_Click" Background="{x:Null}" BorderThickness="0">
+                        <Image Source="Resources/Random.png" Style="{DynamicResource BottomButtonsStyle}"/>
+                    </Border>
+                </StackPanel>
+
+
+
+                <Slider Style="{StaticResource Horizontal_Slider}" Cursor="Hand" MouseLeftButtonUp="timeSlider_MouseLeftButtonUp"
+                        IsMoveToPointEnabled="True" Value="100" Margin="20, 0, 20, 0" Name="AudioSlider" Grid.Column="1"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Center" Visibility="Hidden"/>
+
+                <StackPanel Grid.Column="0" Name="BottomInfo" Orientation="Vertical" HorizontalAlignment="Left"  Margin="5, 0, 0, 0" VerticalAlignment="Center" Panel.ZIndex="0">
+                    <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Singer}" FontWeight="Regular"/>
+                        <TextBlock Text="{Binding Album}" Margin="10,0,0,0" FontWeight="Regular"/>
+                    </StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Visibility, ElementName=AudioSlider}" Value="Visible">
+                                    <Setter Property="Grid.ColumnSpan" Value="1"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ElementName=AudioSlider, Path=Visibility}" Value="Hidden">
+                                    <Setter Property="Grid.ColumnSpan" Value="3"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                </StackPanel>
+
+                <Popup Placement="Right" AllowsTransparency="True" Visibility="Visible" Panel.ZIndex="5" PopupAnimation="Fade" x:Name="pup" VerticalOffset="-85" HorizontalOffset="-205">
+                    <Grid Width="200" Height="80" Opacity="0.8" Background="#FF3A5E83" Margin="0,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="150"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Margin="10,0,0,0" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Foreground="Black" Text="Volume :"/>
+                        <Slider Margin="10,0,10,0" Style="{StaticResource Horizontal_Slider}" Grid.Row="1" Grid.Column="1" Maximum="1" 
+                                Value="{Binding ElementName=ms, Path=Volume, Mode=TwoWay}" VerticalAlignment="Center" BorderBrush="{x:Null}" Foreground="Black" OpacityMask="Black"/>
+
+                        <TextBlock Margin="10,0,0,0" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Foreground="Black" Text="Balance :"/>
+                        <Slider Margin="10,0,10,0" Style="{StaticResource Horizontal_Slider}" Grid.Row="0" Grid.Column="1" Maximum="1"
+                                Value="{Binding ElementName=ms, Path=Balance, Mode=TwoWay}" VerticalAlignment="Center" BorderBrush="{x:Null}" Foreground="Black" OpacityMask="Black"/>
+
+                    </Grid>
+                </Popup>
+
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
